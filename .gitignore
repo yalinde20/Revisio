@@ -1,0 +1,18 @@
+/dist
+/tmp
+/out-tsc
+/node_modules
+/coverage
+/.angular
+npm-debug.log
+.idea/
+.vscode/*
+!.vscode/launch.json
+.DS_Store
+# Cours bruts et clés : jamais versionnés
+/cours-bruts/
+serviceAccount*.json
+.env*
+
+# Contenu des cours (dérivé des cours des enseignants) : jamais versionné ni déployé tel quel
+/public/content/*

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paquet-cours-v1",
+  "title": "Paquet de cours (révision)",
+  "description": "Un cours transformé en matériel de révision : cartes, QCM, exercices, fiche, carte mentale. Généré par /reviser, lu par l'app web.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "matiere", "titre", "genereLe", "sources", "cartes", "qcm", "exercices", "fiche", "carteMentale", "pointsAVerifier"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/slug", "description": "Identifiant stable du cours, ex. nosql-mongodb" },
+    "matiere": { "type": "string", "minLength": 1, "description": "Ex. Bases de données, Programmation mobile" },
+    "titre": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "genereLe": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["fichier", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "fichier": { "type": "string", "minLength": 1, "description": "Nom du fichier seul, jamais un chemin complet" },
+          "type": { "enum": ["pdf", "docx", "md", "txt", "image", "autre"] },
+          "pages": { "type": "string", "description": "Pages ou slides lues, ex. 1-24" }
+        }
+      }
+    },
+    "cartes": { "type": "array", "items": { "$ref": "#/$defs/carte" } },
+    "qcm": { "type": "array", "items": { "$ref": "#/$defs/qcm" } },
+    "exercices": { "type": "array", "items": { "$ref": "#/$defs/exercice" } },
+    "fiche": { "type": "string", "description": "Fiche de synthèse en Markdown (définitions, schémas, pièges)" },
+    "carteMentale": { "type": "string", "description": "Arbre en Markdown (listes imbriquées), rendu par markmap" },
+    "pointsAVerifier": {
+      "type": "array",
+      "description": "Erreurs ou ambiguïtés repérées dans le cours, à vérifier avec l'enseignant",
+      "items": {
+        "type": "object",
+        "required": ["texte"],
+        "additionalProperties": false,
+        "properties": {
+          "texte": { "type": "string", "minLength": 1 },
+          "source": { "$ref": "#/$defs/source" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "source": {
+      "type": "object",
+      "required": ["fichier"],
+      "additionalProperties": false,
+      "properties": {
+        "fichier": { "type": "string", "minLength": 1 },
+        "lieu": { "type": "string", "description": "Page, slide ou section, ex. p. 12" }
+      }
+    },
+    "carte": {
+      "type": "object",
+      "required": ["id", "type", "enonce", "explication", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "type": { "enum": ["vrai_faux", "reponse_courte"] },
+        "enonce": { "type": "string", "minLength": 1, "description": "Affirmation (vrai_faux) ou question (reponse_courte)" },
+        "vrai": { "type": "boolean", "description": "vrai_faux uniquement" },
+        "reponses": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "description": "reponse_courte uniquement : réponses acceptées, la première est la réponse affichée" },
+        "explication": { "type": "string", "minLength": 1 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "$ref": "#/$defs/source" },
+        "aVerifier": { "type": "boolean" },
+        "origine": { "enum": ["cours", "notes_perso", "bonus"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "vrai_faux" } } }, "then": { "required": ["vrai"], "not": { "required": ["reponses"] } } },
+        { "if": { "properties": { "type": { "const": "reponse_courte" } } }, "then": { "required": ["reponses"], "not": { "required": ["vrai"] } } }
+      ]
+    },
+    "qcm": {
+      "type": "object",
+      "required": ["id", "enonce", "options", "difficulte", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "enonce": { "type": "string", "minLength": 1 },
+        "options": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["texte", "correcte", "explication"],
+            "additionalProperties": false,
+            "properties": {
+              "texte": { "type": "string", "minLength": 1 },
+              "correcte": { "type": "boolean" },
+              "explication": { "type": "string", "minLength": 1, "description": "Pourquoi cette option est juste ou fausse" }
+            }
+          }
+        },
+        "difficulte": { "enum": [1, 2, 3] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "$ref": "#/$defs/source" },
+        "aVerifier": { "type": "boolean" },
+        "origine": { "enum": ["cours", "notes_perso", "bonus"] }
+      }
+    },
+    "exercice": {
+      "type": "object",
+      "required": ["id", "type", "titre", "enonce", "correction", "difficulte", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "type": { "enum": ["question", "prediction", "requete", "parsons", "debogage", "calcul"] },
+        "titre": { "type": "string", "minLength": 1 },
+        "enonce": { "type": "string", "minLength": 1, "description": "Markdown, blocs de code autorisés" },
+        "donnees": { "type": "string", "description": "Jeu de données ou code fourni, en Markdown" },
+        "lignes": { "type": "array", "minItems": 2, "items": { "type": "string" }, "description": "parsons uniquement : lignes de la solution dans le bon ordre" },
+        "distracteurs": { "type": "array", "items": { "type": "string" }, "description": "parsons uniquement : lignes fausses à écarter" },
+        "indices": { "type": "array", "items": { "type": "string" } },
+        "correction": { "type": "string", "minLength": 1, "description": "Correction détaillée en Markdown" },
+        "difficulte": { "enum": [1, 2, 3] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "source": { "$ref": "#/$defs/source" },
+        "aVerifier": { "type": "boolean" },
+        "origine": { "enum": ["cours", "notes_perso", "bonus"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "parsons" } } }, "then": { "required": ["lignes"] } }
+      ]
+    }
+  }
+}

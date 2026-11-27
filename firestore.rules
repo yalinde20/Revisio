@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// Règles Firestore de Revisio (pas encore déployées : le projet Firebase reste à créer).
+// - Seuls les comptes dont l'e-mail est dans /autorises (créé à la main par Yoan, depuis la
+//   console) lisent le contenu des cours.
+// - Personne n'écrit dans les cours depuis l'app : la publication passe par le SDK admin.
+// - Chacun ne lit et n'écrit que sa propre progression, avec des documents de forme fixe.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function connecte() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function autorise() {
+      return connecte()
+        && exists(/databases/$(database)/documents/autorises/$(request.auth.token.email.lower()));
+    }
+
+    // Liste blanche : aucun accès client (la règle ci-dessus lit le document côté serveur)
+    match /autorises/{email} {
+      allow read, write: if false;
+    }
+
+    // Contenu : lecture seule pour les comptes autorisés
+    match /cours/{coursId} {
+      allow read: if autorise();
+      allow write: if false;
+    }
+
+    // Progression personnelle : une carte FSRS par document
+    match /utilisateurs/{uid}/cartes/{cleCarte} {
+      allow read: if autorise() && request.auth.uid == uid;
+      allow create, update: if autorise() && request.auth.uid == uid && carteValide(request.resource.data);
+      allow delete: if autorise() && request.auth.uid == uid;
+    }
+
+    function carteValide(d) {
+      return d.keys().hasOnly(['coursId', 'carteId', 'carte'])
+        && d.coursId is string && d.coursId.size() <= 80
+        && d.carteId is string && d.carteId.size() <= 80
+        && d.carte is map
+        && d.carte.keys().hasOnly(['due', 'stability', 'difficulty', 'elapsed_days', 'scheduled_days',
+                                   'learning_steps', 'reps', 'lapses', 'state', 'last_review'])
+        && d.carte.due is string && d.carte.due.size() <= 40
+        && d.carte.stability is number && d.carte.difficulty is number
+        && d.carte.reps is int && d.carte.lapses is int
+        && d.carte.state in [0, 1, 2, 3];
+    }
+
+    match /{autre=**} {
+      allow read, write: if false;
+    }
+  }
+}
