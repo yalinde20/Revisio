@@ -6,6 +6,7 @@ import { ResultatVerification, verifierReponse } from '../../core/engine/verific
 import { Carte, Paquet } from '../../core/models/paquet';
 import { CatalogueService } from '../../core/services/catalogue.service';
 import { ProgressionService } from '../../core/services/progression.service';
+import { rendreMarkdownEnLigne } from '../../core/util/markdown';
 
 type Phase = 'chargement' | 'question' | 'correction' | 'fin' | 'vide';
 
@@ -56,7 +57,7 @@ type Phase = 'chargement' | 'question' | 'correction' | 'fin' | 'vide';
               <p class="mb-2 text-xs font-medium uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
                 {{ c.type === 'vrai_faux' ? 'Vrai ou faux ?' : 'Réponse courte' }}
               </p>
-              <p class="mb-4 whitespace-pre-line text-lg font-medium">{{ c.enonce }}</p>
+              <p class="mb-4 whitespace-pre-line text-lg font-medium" [innerHTML]="md(c.enonce)"></p>
 
               @if (phase() === 'question') {
                 @if (c.type === 'vrai_faux') {
@@ -97,7 +98,7 @@ type Phase = 'chargement' | 'question' | 'correction' | 'fin' | 'vide';
                   <span class="text-sm text-gray-600 dark:text-gray-400">Réponse attendue : </span>
                   <strong>{{ reponseAttendue() }}</strong>
                 </p>
-                <p class="mb-2 whitespace-pre-line">{{ c.explication }}</p>
+                <p class="mb-2 whitespace-pre-line" [innerHTML]="md(c.explication)"></p>
                 <p class="mb-3 text-xs text-gray-500">Source : {{ c.source.fichier }}@if (c.source.lieu) {, {{ c.source.lieu }}}</p>
                 @if (c.aVerifier) {
                   <p class="mb-3 text-xs text-amber-700 dark:text-amber-300">⚠ Point à vérifier avec l'enseignant.</p>
@@ -122,6 +123,7 @@ export class SeanceCartesPage implements OnInit {
   private readonly progression = inject(ProgressionService);
 
   protected readonly coursId = this.route.snapshot.paramMap.get('id') ?? '';
+  protected readonly md = rendreMarkdownEnLigne;
   protected readonly phase = signal<Phase>('chargement');
   protected readonly erreur = signal('');
   protected readonly file = signal<Carte[]>([]);

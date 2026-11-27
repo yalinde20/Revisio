@@ -35,14 +35,19 @@ import { ProgressionService } from '../../core/services/progression.service';
         }
       </section>
 
-      <section class="carte mb-4">
-        <h2 class="mb-2 font-semibold">Bientôt</h2>
-        <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-          <li>QCM chronométrés ({{ p.qcm.length }} questions)</li>
-          <li>Exercices avec correction ({{ p.exercices.length }})</li>
-          <li>Fiche de synthèse et carte mentale</li>
-        </ul>
-      </section>
+      <nav class="mb-4 grid gap-3" aria-label="Méthodes de révision">
+        <a [routerLink]="['/cours', p.id, 'qcm']" class="carte flex items-center justify-between transition hover:border-indigo-400" [class.pointer-events-none]="p.qcm.length === 0" [class.opacity-50]="p.qcm.length === 0">
+          <span class="font-semibold">QCM, entraînement ou examen chronométré</span>
+          <span class="text-sm text-gray-600 dark:text-gray-400">{{ p.qcm.length }}</span>
+        </a>
+        <a [routerLink]="['/cours', p.id, 'exercices']" class="carte flex items-center justify-between transition hover:border-indigo-400" [class.pointer-events-none]="p.exercices.length === 0" [class.opacity-50]="p.exercices.length === 0">
+          <span class="font-semibold">Exercices avec correction</span>
+          <span class="text-sm text-gray-600 dark:text-gray-400">{{ p.exercices.length }}</span>
+        </a>
+        <a [routerLink]="['/cours', p.id, 'fiche']" class="carte flex items-center justify-between transition hover:border-indigo-400">
+          <span class="font-semibold">Fiche de synthèse et carte mentale</span>
+        </a>
+      </nav>
 
       @if (p.pointsAVerifier.length > 0) {
         <section class="carte mb-4">

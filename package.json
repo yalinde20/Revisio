@@ -14,7 +14,14 @@
   "prettier": {
     "printWidth": 100,
     "singleQuote": true,
-    "overrides": [{ "files": "*.html", "options": { "parser": "angular" } }]
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
   },
   "private": true,
   "dependencies": {
@@ -26,6 +33,9 @@
     "@angular/router": "^20.3.0",
     "@angular/service-worker": "^20.3.0",
     "idb": "^8.0.0",
+    "marked": "^18.3.0",
+    "markmap-lib": "^0.18.13",
+    "markmap-view": "^0.18.13",
     "rxjs": "~7.8.0",
     "ts-fsrs": "^5.0.0",
     "tslib": "^2.3.0",
